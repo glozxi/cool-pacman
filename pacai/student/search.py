@@ -2,6 +2,8 @@
 In this file, you will implement generic search algorithms which are called by Pacman agents.
 """
 
+from pacai.util.stack import Stack
+
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first [p 85].
@@ -17,9 +19,32 @@ def depthFirstSearch(problem):
     print("Start's successors: %s" % (problem.successorStates(problem.startingState())))
     ```
     """
-
     # *** Your Code Here ***
-    raise NotImplementedError()
+    stack = Stack()
+    stack.push(problem.startingState())
+    visited = set(problem.startingState())
+    parent = {}
+
+    while not stack.isEmpty():
+        currState = stack.pop()
+        if problem.isGoal(currState):
+            res = []
+            while True:
+                # is start state
+                if (currState not in parent):
+                    break
+                action = parent[currState][1]
+                currState = parent[currState][0]
+                res.insert(0, action)
+            return res
+        if currState not in visited:
+            visited.add(currState)
+            for (successorState, action, cost) in problem.successorStates(currState):
+                if (successorState in visited):
+                    continue
+                parent[successorState] = (currState, action)
+                stack.push(successorState)
+    return []
 
 def breadthFirstSearch(problem):
     """
