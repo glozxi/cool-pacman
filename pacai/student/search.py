@@ -3,6 +3,7 @@ In this file, you will implement generic search algorithms which are called by P
 """
 
 from pacai.util.stack import Stack
+from pacai.util.queue import Queue
 
 def depthFirstSearch(problem):
     """
@@ -22,7 +23,7 @@ def depthFirstSearch(problem):
     # *** Your Code Here ***
     stack = Stack()
     stack.push(problem.startingState())
-    visited = set(problem.startingState())
+    visited = set()
     parent = {}
 
     while not stack.isEmpty():
@@ -52,7 +53,31 @@ def breadthFirstSearch(problem):
     """
 
     # *** Your Code Here ***
-    raise NotImplementedError()
+    queue = Queue()
+    queue.push(problem.startingState())
+    visited = set()
+    parent = {}
+
+    while not queue.isEmpty():
+        currState = queue.pop()
+        if (problem.isGoal(currState)):
+            res = []
+            while True:
+                # is start state
+                if (currState not in parent):
+                    break
+                action = parent[currState][1]
+                currState = parent[currState][0]
+                res.insert(0, action)
+            return res
+        if currState not in visited:
+            visited.add(currState)
+            for (successorState, action, cost) in problem.successorStates(currState):
+                if (successorState in visited):
+                    continue
+                parent[successorState] = (currState, action)
+                queue.push(successorState)
+    return []
 
 def uniformCostSearch(problem):
     """
