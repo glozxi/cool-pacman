@@ -4,6 +4,7 @@ In this file, you will implement generic search algorithms which are called by P
 
 from pacai.util.stack import Stack
 from pacai.util.queue import Queue
+from pacai.util.priorityQueue import PriorityQueue
 
 def depthFirstSearch(problem):
     """
@@ -23,29 +24,27 @@ def depthFirstSearch(problem):
     # *** Your Code Here ***
     stack = Stack()
     stack.push(problem.startingState())
-    visited = set()
+    visited = {problem.startingState()}
     parent = {}
 
     while not stack.isEmpty():
         currState = stack.pop()
         if problem.isGoal(currState):
-            res = []
-            while True:
-                # is start state
-                if (currState not in parent):
-                    break
-                action = parent[currState][1]
-                currState = parent[currState][0]
-                res.insert(0, action)
-            return res
-        if currState not in visited:
+            break
+        for (successorState, action, cost) in problem.successorStates(currState):
+            if (successorState in visited):
+                continue
+            parent[successorState] = (currState, action)
             visited.add(currState)
-            for (successorState, action, cost) in problem.successorStates(currState):
-                if (successorState in visited):
-                    continue
-                parent[successorState] = (currState, action)
-                stack.push(successorState)
-    return []
+            stack.push(successorState)
+    path = []
+    while True:
+        if (currState not in parent):
+            break
+        action = parent[currState][1]
+        currState = parent[currState][0]
+        path.insert(0, action)
+    return path
 
 def breadthFirstSearch(problem):
     """
@@ -55,29 +54,27 @@ def breadthFirstSearch(problem):
     # *** Your Code Here ***
     queue = Queue()
     queue.push(problem.startingState())
-    visited = set()
+    visited = {problem.startingState()}
     parent = {}
 
     while not queue.isEmpty():
         currState = queue.pop()
         if (problem.isGoal(currState)):
-            res = []
-            while True:
-                # is start state
-                if (currState not in parent):
-                    break
-                action = parent[currState][1]
-                currState = parent[currState][0]
-                res.insert(0, action)
-            return res
-        if currState not in visited:
+            break            
+        for (successorState, action, cost) in problem.successorStates(currState):
+            if (successorState in visited):
+                continue
             visited.add(currState)
-            for (successorState, action, cost) in problem.successorStates(currState):
-                if (successorState in visited):
-                    continue
-                parent[successorState] = (currState, action)
-                queue.push(successorState)
-    return []
+            parent[successorState] = (currState, action)
+            queue.push(successorState)
+    res = []
+    while True:
+        if (currState not in parent):
+            break
+        action = parent[currState][1]
+        currState = parent[currState][0]
+        res.insert(0, action)
+    return res
 
 def uniformCostSearch(problem):
     """
@@ -85,7 +82,30 @@ def uniformCostSearch(problem):
     """
 
     # *** Your Code Here ***
-    raise NotImplementedError()
+    pq = PriorityQueue()
+    pq.push((problem.startingState(), 0), 0)
+    visited = {problem.startingState()}
+    parent = {}
+    
+    while not pq.isEmpty():
+        (currState, currCost) = pq.pop()
+        if (problem.isGoal(currState)):
+            break
+        for (successorState, action, cost) in problem.successorStates(currState):
+            if (successorState in visited):
+                continue
+            visited.add(currState)
+            parent[successorState] = (currState, action)
+            pq.push((successorState, currCost + cost), currCost + cost)
+
+    res = []
+    while True:
+        if (currState not in parent):
+            break
+        action = parent[currState][1]
+        currState = parent[currState][0]
+        res.insert(0, action)
+    return res
 
 def aStarSearch(problem, heuristic):
     """
@@ -93,4 +113,29 @@ def aStarSearch(problem, heuristic):
     """
 
     # *** Your Code Here ***
-    raise NotImplementedError()
+    pq = PriorityQueue()
+    startingFValue = heuristic(problem.startingState(), problem)
+    pq.push((problem.startingState(), 0), startingFValue)
+    visited = {problem.startingState()}
+    parent = {}
+    
+    while not pq.isEmpty():
+        (currState, currCost) = pq.pop()
+        if (problem.isGoal(currState)):
+            break
+        for (successorState, action, cost) in problem.successorStates(currState):
+            if (successorState in visited):
+                continue
+            visited.add(currState)
+            parent[successorState] = (currState, action)
+            succFValue = heuristic(successorState, problem) + currCost + cost
+            pq.push((successorState, currCost + cost), succFValue)
+
+    res = []
+    while True:
+        if (currState not in parent):
+            break
+        action = parent[currState][1]
+        currState = parent[currState][0]
+        res.insert(0, action)
+    return res
