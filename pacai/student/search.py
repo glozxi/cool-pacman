@@ -35,7 +35,7 @@ def depthFirstSearch(problem):
             if (successorState in visited):
                 continue
             parent[successorState] = (currState, action)
-            visited.add(currState)
+            visited.add(successorState)
             stack.push(successorState)
     path = []
     while True:
@@ -60,11 +60,11 @@ def breadthFirstSearch(problem):
     while not queue.isEmpty():
         currState = queue.pop()
         if (problem.isGoal(currState)):
-            break            
+            break
         for (successorState, action, cost) in problem.successorStates(currState):
             if (successorState in visited):
                 continue
-            visited.add(currState)
+            visited.add(successorState)
             parent[successorState] = (currState, action)
             queue.push(successorState)
     res = []
@@ -94,7 +94,7 @@ def uniformCostSearch(problem):
         for (successorState, action, cost) in problem.successorStates(currState):
             if (successorState in visited):
                 continue
-            visited.add(currState)
+            visited.add(successorState)
             parent[successorState] = (currState, action)
             pq.push((successorState, currCost + cost), currCost + cost)
 
@@ -126,7 +126,7 @@ def aStarSearch(problem, heuristic):
         for (successorState, action, cost) in problem.successorStates(currState):
             if (successorState in visited):
                 continue
-            visited.add(currState)
+            visited.add(successorState)
             parent[successorState] = (currState, action)
             succFValue = heuristic(successorState, problem) + currCost + cost
             pq.push((successorState, currCost + cost), succFValue)

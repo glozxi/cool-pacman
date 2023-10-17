@@ -14,6 +14,8 @@ from pacai.core.search.problem import SearchProblem
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.base import SearchAgent
 
+from pacai.core.directions import Directions
+
 class CornersProblem(SearchProblem):
     """
     This search problem finds paths through all four corners of a layout.
@@ -64,7 +66,38 @@ class CornersProblem(SearchProblem):
                 logging.warning('Warning: no food in corner ' + str(corner))
 
         # *** Your Code Here ***
-        raise NotImplementedError()
+
+    def startingState(self):
+        cornersReached = frozenset()
+        if self.startingPosition in self.corners:
+            cornersReached = frozenset({self.startingPosition})
+        return (self.startingPosition, cornersReached)
+    
+    def isGoal(self, state):
+        return set(self.corners).issubset(state[1])
+    
+    def successorStates(self, state):
+        successors = []
+
+        for action in Directions.CARDINAL:
+            x, y = state[0]
+            cornersReached = state[1]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
+
+            if (not hitsWall):
+                # Construct the successor.
+                nextCorners = frozenset()
+                if (nextx, nexty) in self.corners:
+                    nextCorners = frozenset({(nextx, nexty)})
+                nextState = ((nextx, nexty), frozenset.union(nextCorners, cornersReached))
+                cost = 1
+                successors.append((nextState, action, cost))
+        # Bookkeeping for display purposes (the highlight in the GUI).
+        self._numExpanded += 1
+        
+        return successors
 
     def actionsCost(self, actions):
         """
