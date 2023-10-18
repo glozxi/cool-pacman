@@ -16,6 +16,8 @@ from pacai.agents.search.base import SearchAgent
 
 from pacai.core.directions import Directions
 
+from pacai.core.distanceCalculator import Distancer
+
 class CornersProblem(SearchProblem):
     """
     This search problem finds paths through all four corners of a layout.
@@ -133,7 +135,24 @@ def cornersHeuristic(state, problem):
     # walls = problem.walls  # These are the walls of the maze, as a Grid.
 
     # *** Your Code Here ***
-    return heuristic.null(state, problem)  # Default to trivial solution
+    def getDistance(a, b):
+        return Distancer(problem).getDistance(a, b)
+    cornersReached = state[1]
+    cornersUnreached = [corner for corner in problem.corners if corner not in cornersReached]
+    res = 0
+    currPos = state[0]
+    while cornersUnreached:
+        # get closest food to current position
+        closest = cornersUnreached[0]
+        closestDist = getDistance(currPos, closest)
+        for i in range(1, len(cornersUnreached)):
+            if getDistance(currPos, cornersUnreached[i]) < closestDist:
+                closest = cornersUnreached[i]
+                closestDist = getDistance(currPos, cornersUnreached[i])
+        res += closestDist
+        cornersUnreached.remove(closest)
+        currPos = closest
+    return res
 
 def foodHeuristic(state, problem):
     """
