@@ -5,6 +5,7 @@ from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
 
 from pacai.core.distance import manhattan
+from pacai.core.actions import Directions
 
 class ReflexAgent(BaseAgent):
     """
@@ -102,9 +103,59 @@ class MinimaxAgent(MultiAgentSearchAgent):
     `pacai.agents.search.multiagent.MultiAgentSearchAgent.getTreeDepth`
     and `pacai.agents.search.multiagent.MultiAgentSearchAgent.getEvaluationFunction`.
     """
-
+    
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
+
+    def getAction(self, state):
+        
+        def maxValue(state, depth):
+            if depth == self._treeDepth or not state.getLegalActions(0):
+                return self.getEvaluationFunction()(state)
+            max = -math.inf
+            for action in state.getLegalActions(0):
+                if action == Directions.STOP:
+                    continue
+                val = minValue(state.generateSuccessor(0, action), 1, depth)
+                if val > max:
+                    max = val
+            return max
+        
+        def minValue(state, ghostNumber, depth):
+            if depth == self._treeDepth or not state.getLegalActions(ghostNumber):
+                return self.getEvaluationFunction()(state)
+            min = math.inf
+            for action in state.getLegalActions(ghostNumber):
+                if action == Directions.STOP:
+                    continue
+                totalGhosts = state.getNumAgents() - 1
+                if ghostNumber == totalGhosts:
+                    val = maxValue(
+                        state.generateSuccessor(ghostNumber, action), depth + 1)
+                else:
+                    val = minValue(
+                        state.generateSuccessor(ghostNumber, action), ghostNumber + 1, depth)
+                if val < min:
+                    min = val
+            return min
+            
+        max = -math.inf
+        maxAct = None
+        for action in state.getLegalActions(0):
+            if action == Directions.STOP:
+                continue
+            val = minValue(state.generateSuccessor(0, action), 1, 0)
+            if val > max:
+                max = val
+                maxAct = action
+
+        return maxAct
+
+    def getTreeDepth(self):
+        return super().getTreeDepth()
+    
+    def getEvaluationFunction(self):
+        return super().getEvaluationFunction()
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
