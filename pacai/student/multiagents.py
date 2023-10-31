@@ -1,7 +1,10 @@
 import random
+import math
 
 from pacai.agents.base import BaseAgent
 from pacai.agents.search.multiagent import MultiAgentSearchAgent
+
+from pacai.core.distance import manhattan
 
 class ReflexAgent(BaseAgent):
     """
@@ -57,8 +60,21 @@ class ReflexAgent(BaseAgent):
         # newScaredTimes = [ghostState.getScaredTimer() for ghostState in newGhostStates]
 
         # *** Your Code Here ***
-
-        return successorGameState.getScore()
+        newPosition = successorGameState.getPacmanPosition()
+        newGhostStates = successorGameState.getGhostStates()
+        nonScaredGhostPos = [
+            state.getPosition() for state in newGhostStates if not state.isScared()]
+        if nonScaredGhostPos:
+            distToGhost = min(manhattan(
+                newPosition, tuple(map(int, pos))) for pos in nonScaredGhostPos)
+            if distToGhost == 0:
+                distToGhost = 0.0001
+        else:
+            distToGhost = math.inf
+        foodList = currentGameState.getFood().asList()
+        succFoodNum = len(successorGameState.getFood().asList())
+        distToFood = min(manhattan(newPosition, foodPos) for foodPos in foodList)
+        return -2.0 / distToGhost - 2 * distToFood - 4 * succFoodNum
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """

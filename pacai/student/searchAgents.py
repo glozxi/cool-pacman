@@ -191,7 +191,10 @@ def foodHeuristic(state, problem):
         return manhattan(a, b)
     if not foodCoords:
         return 0
-    return max([getDistance(position, coord) for coord in foodCoords])
+    nearestFoodDistance, nearestFoodCoord = min(
+        [(getDistance(position, coord), coord) for coord in foodCoords])
+    farthestFromNearestFood = max([getDistance(nearestFoodCoord, coord) for coord in foodCoords])
+    return nearestFoodDistance + farthestFromNearestFood
 
 class ClosestDotSearchAgent(SearchAgent):
     """
