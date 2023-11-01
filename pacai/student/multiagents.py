@@ -169,8 +169,61 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     and `pacai.agents.search.multiagent.MultiAgentSearchAgent.getEvaluationFunction`.
     """
 
+    def getAction(self, state):
+        def maxValue(state, depth, alpha, beta):
+            if depth == self._treeDepth or not state.getLegalActions(0):
+                return self.getEvaluationFunction()(state)
+            v = -math.inf
+            for action in state.getLegalActions(0):
+                if action == Directions.STOP:
+                    continue
+                v = max(v, minValue(
+                        state.generateSuccessor(0, action), 1, depth, alpha, beta))
+                if v >= beta:
+                    return v
+                alpha = max(alpha, v)
+            return v
+        
+        def minValue(state, ghostNumber, depth, alpha, beta):
+            if depth == self._treeDepth or not state.getLegalActions(ghostNumber):
+                return self.getEvaluationFunction()(state)
+            v = math.inf
+            for action in state.getLegalActions(ghostNumber):
+                if action == Directions.STOP:
+                    continue
+                totalGhosts = state.getNumAgents() - 1
+                if ghostNumber == totalGhosts:
+                    v = min(v, maxValue(
+                        state.generateSuccessor(
+                            ghostNumber, action), depth + 1, alpha, beta))
+                else:
+                    v = min(v, minValue(
+                        state.generateSuccessor(
+                            ghostNumber, action), ghostNumber + 1, depth, alpha, beta))
+                if v <= alpha:
+                    return v
+                beta = min(beta, v)
+            return v
+            
+        maxVal = -math.inf
+        maxAct = None
+        for action in state.getLegalActions(0):
+            if action == Directions.STOP:
+                continue
+            v = maxValue(state.generateSuccessor(0, action), 0, -math.inf, math.inf)
+            if v > maxVal:
+                maxVal = v
+                maxAct = action
+        return maxAct
+
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
+        
+    def getTreeDepth(self):
+        return super().getTreeDepth()
+    
+    def getEvaluationFunction(self):
+        return super().getEvaluationFunction()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
