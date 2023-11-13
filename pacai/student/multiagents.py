@@ -126,8 +126,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 return self.getEvaluationFunction()(state)
             min = math.inf
             for action in state.getLegalActions(ghostNumber):
-                if action == Directions.STOP:
-                    continue
                 totalGhosts = state.getNumAgents() - 1
                 if ghostNumber == totalGhosts:
                     val = maxValue(
@@ -189,8 +187,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return self.getEvaluationFunction()(state)
             v = math.inf
             for action in state.getLegalActions(ghostNumber):
-                if action == Directions.STOP:
-                    continue
                 totalGhosts = state.getNumAgents() - 1
                 if ghostNumber == totalGhosts:
                     v = min(v, maxValue(
@@ -242,14 +238,105 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
+    def getAction(self, state):
+        def maxValue(state, depth):
+            if depth == self._treeDepth or not state.getLegalActions(0):
+                return self.getEvaluationFunction()(state)
+            v = -math.inf
+            for action in state.getLegalActions(0):
+                if action == Directions.STOP:
+                    continue
+                v = max(v, expValue(
+                        state.generateSuccessor(0, action), 1, depth))
+            return v
+        
+        def expValue(state, ghostNumber, depth):
+            legalActions = state.getLegalActions(ghostNumber)
+            if depth == self._treeDepth or not legalActions:
+                return self.getEvaluationFunction()(state)
+            expVal = 0
+            for action in legalActions:
+                totalGhosts = state.getNumAgents() - 1
+                if ghostNumber == totalGhosts:
+                    v = maxValue(
+                        state.generateSuccessor(
+                            ghostNumber, action), depth + 1)
+                else:
+                    v = expValue(
+                        state.generateSuccessor(
+                            ghostNumber, action), ghostNumber + 1, depth)
+                expVal += v / float(len(legalActions))
+            return expVal
+            
+        maxVal = -math.inf
+        maxAct = None
+        for action in state.getLegalActions(0):
+            if action == Directions.STOP:
+                continue
+            v = maxValue(state.generateSuccessor(0, action), 0)
+            if v > maxVal:
+                maxVal = v
+                maxAct = action
+        return maxAct
+
+    def getTreeDepth(self):
+        return super().getTreeDepth()
+    
+    def getEvaluationFunction(self):
+        return super().getEvaluationFunction()
+
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable evaluation function.
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: I wanted pacman to avoid ghosts so I used the negative reciprocal of the nearest
+    distance to a non-scared ghost. It becomes more negative when the ghost is nearer. I multiplied
+    it by a large number because I did not want pacman to die.
+
+    I used negative of the nearest distance to a scared ghost because they give a lot of points when
+    pacman eats them.
+
+    I used negative of the nearest distance to food because I wanted pacman to go nearer to the food
+    to eat them.
+
+    I used negative of the number of food left because I wanted pacman to eat food so fewer remains.
+
+    I used a large negative of the number of capsules left because I wanted pacman to eat capsules
+    and get a lot of points.
+
+    I used the score of the state so that pacman does things that increases the score. When pacman
+    goes near something that it can eat to increase the score, it will eat it.
+
     """
 
-    return currentGameState.getScore()
+    position = currentGameState.getPacmanPosition()
+    ghostStates = currentGameState.getGhostStates()
+    nonScaredGhostPos = [
+        state.getPosition() for state in ghostStates if not state.isScared()]
+    distToNormalGhost = math.inf
+    if nonScaredGhostPos:
+        distToNormalGhost = min(manhattan(
+            position, tuple(map(int, pos))) for pos in nonScaredGhostPos)
+        if distToNormalGhost == 0:
+            distToNormalGhost = 0.000001
+
+    scaredGhostPos = [
+        state.getPosition() for state in ghostStates if state.isScared()]
+    distToScaredGhost = 0
+    if scaredGhostPos:
+        distToScaredGhost = min(manhattan(
+            position, tuple(map(int, pos))) for pos in scaredGhostPos)
+
+    foodList = currentGameState.getFood().asList()
+    foodNum = currentGameState.getNumFood()
+    distToFood = 0
+    if foodNum:
+        distToFood = min(manhattan(position, foodPos) for foodPos in foodList)
+
+    capsuleNum = currentGameState.getNumCapsules()
+
+    return (-100.0 / distToNormalGhost - 5 * distToScaredGhost
+            - 1.5 * distToFood - 2 * foodNum - 20 * capsuleNum + currentGameState.getScore())
 
 class ContestAgent(MultiAgentSearchAgent):
     """
