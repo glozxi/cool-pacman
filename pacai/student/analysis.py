@@ -11,31 +11,34 @@ NOT_POSSIBLE = None
 
 def question2():
     """
-    [Enter a description of what you did here.]
+    Reduced the noise so that it would be unlikely for the agent to get the negative rewards when
+    moving left and right, so it will not want to end the game quickly by moving left.
     """
 
     answerDiscount = 0.9
-    answerNoise = 0.2
+    answerNoise = 0.0001
 
     return answerDiscount, answerNoise
 
 def question3a():
     """
-    [Enter a description of what you did here.]
+    Noise is 0 so that the agent can go left and right near the cliff without risking negative
+    payoff. Small discount so that the agent will prefer a reward that is nearer.
     """
 
-    answerDiscount = 0.9
-    answerNoise = 0.2
+    answerDiscount = 0.3
+    answerNoise = 0.0
     answerLivingReward = 0.0
 
     return answerDiscount, answerNoise, answerLivingReward
 
 def question3b():
     """
-    [Enter a description of what you did here.]
+    Small discount so that the agent will prefer a reward that is nearer. Noise is 0.2 so that
+    the agent will avoid going left and right near the cliff.
     """
 
-    answerDiscount = 0.9
+    answerDiscount = 0.3
     answerNoise = 0.2
     answerLivingReward = 0.0
 
@@ -43,34 +46,37 @@ def question3b():
 
 def question3c():
     """
-    [Enter a description of what you did here.]
+    Large discount so that the agent will prefer a larger reward that is further away. Noise is 0 so
+    that the agent risks the cliff.
     """
 
     answerDiscount = 0.9
-    answerNoise = 0.2
+    answerNoise = 0.0
     answerLivingReward = 0.0
 
     return answerDiscount, answerNoise, answerLivingReward
 
 def question3d():
     """
-    [Enter a description of what you did here.]
+    Large discount so that the agent will prefer a larger reward that is further away. Noise is 0.4
+    so that the agent does not risk the cliff.
     """
 
     answerDiscount = 0.9
-    answerNoise = 0.2
+    answerNoise = 0.4
     answerLivingReward = 0.0
 
     return answerDiscount, answerNoise, answerLivingReward
 
 def question3e():
     """
-    [Enter a description of what you did here.]
+    Noise is 0.4 so that the agent does not risk the cliff. Living reward is 1.0 so that the agent
+    wants to continue living and not exit.
     """
 
     answerDiscount = 0.9
-    answerNoise = 0.2
-    answerLivingReward = 0.0
+    answerNoise = 0.4
+    answerLivingReward = 2.0
 
     return answerDiscount, answerNoise, answerLivingReward
 

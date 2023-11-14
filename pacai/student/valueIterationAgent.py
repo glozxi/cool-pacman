@@ -68,7 +68,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         qVal = 0
         transitionStatesAndProbs = self.mdp.getTransitionStatesAndProbs(state, action)
         for nextState, prob in transitionStatesAndProbs:
-            qVal += prob * (self.mdp.getReward(state, action, nextState) 
+            qVal += prob * (self.mdp.getReward(state, action, nextState)
                             + self.discountRate * self.getValue(nextState))
         return qVal
     
