@@ -1,5 +1,7 @@
 from pacai.agents.learning.reinforcement import ReinforcementAgent
 from pacai.util import reflection
+from pacai.util import probability
+import math
 
 class QLearningAgent(ReinforcementAgent):
     """
@@ -39,13 +41,20 @@ class QLearningAgent(ReinforcementAgent):
     You should do your Q-Value update here.
     Note that you should never call this function, it will be called on your behalf.
 
-    DESCRIPTION: <Write something here so we know what you did.>
+    DESCRIPTION:
+    Q-values get updated through the update method.
+    
+    getAction gets the action to take in the current state. With epsilon probability it
+    will act randomly, else it will act according to current policy.
+
+    update incorporates a new sample estimate into the old estimate of a Q-value.
     """
 
     def __init__(self, index, **kwargs):
         super().__init__(index, **kwargs)
 
         # You can initialize Q-values here.
+        self.qValues = {}
 
     def getQValue(self, state, action):
         """
@@ -53,7 +62,8 @@ class QLearningAgent(ReinforcementAgent):
         and `pacai.core.directions.Directions`.
         Should return 0.0 if the (state, action) pair has never been seen.
         """
-
+        if (state, action) in self.qValues:
+            return self.qValues[(state, action)]
         return 0.0
 
     def getValue(self, state):
@@ -69,7 +79,15 @@ class QLearningAgent(ReinforcementAgent):
         Whereas this method returns the value of the best action.
         """
 
-        return 0.0
+        legalActs = self.getLegalActions(state)
+        if not legalActs:
+            return 0.0
+        max = -math.inf
+        for act in legalActs:
+            val = self.getQValue(state, act)
+            if val > max:
+                max = val
+        return max
 
     def getPolicy(self, state):
         """
@@ -84,7 +102,32 @@ class QLearningAgent(ReinforcementAgent):
         Whereas this method returns the best action itself.
         """
 
-        return None
+        legalActs = self.getLegalActions(state)
+        if not legalActs:
+            return None
+        max = -math.inf
+        maxAct = None
+        for act in legalActs:
+            val = self.getQValue(state, act)
+            if val > max:
+                max = val
+                maxAct = act
+        return maxAct
+    
+    def getAction(self, state):
+        isDoRandomAct = probability.flipCoin(self.epsilon)
+        legalActs = self.getLegalActions(state)
+        if not legalActs:
+            return None
+        if isDoRandomAct:
+            return probability.random.choice(legalActs)
+        else:
+            return self.getPolicy(state)
+        
+    def update(self, state, action, nextState, reward):
+        sample = reward + self.discountRate * self.getValue(nextState)
+        newQVal = (1 - self.alpha) * self.getQValue(state, action) + self.alpha * sample
+        self.qValues[(state, action)] = newQVal
 
 class PacmanQAgent(QLearningAgent):
     """
@@ -136,6 +179,7 @@ class ApproximateQAgent(PacmanQAgent):
         self.featExtractor = reflection.qualifiedImport(extractor)
 
         # You might want to initialize weights here.
+        self.weights = {}
 
     def final(self, state):
         """
@@ -149,4 +193,23 @@ class ApproximateQAgent(PacmanQAgent):
         if self.episodesSoFar == self.numTraining:
             # You might want to print your weights here for debugging.
             # *** Your Code Here ***
-            raise NotImplementedError()
+            print(self.weights)
+        
+    def getQValue(self, state, action):
+        features = self.featExtractor.getFeatures(self.featExtractor, state, action)
+        qVal = 0.0
+        for feature, count in features.items():
+            if feature not in self.weights:
+                continue
+            qVal += self.weights[feature] * count
+        return qVal
+    
+    def update(self, state, action, nextState, reward):
+        features = self.featExtractor.getFeatures(self.featExtractor, state, action)
+        sample = reward + self.discountRate * self.getValue(nextState)
+        error = sample - self.getQValue(state, action)
+        for feature, count in features.items():
+            if feature not in self.weights:
+                self.weights[feature] = self.alpha * error * count
+            else:
+                self.weights[feature] += self.alpha * error * count

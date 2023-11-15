@@ -82,13 +82,10 @@ def question3e():
 
 def question6():
     """
-    [Enter a description of what you did here.]
+    There are too few episodes to find the optimal policy.
     """
-
-    answerEpsilon = 0.3
-    answerLearningRate = 0.5
-
-    return answerEpsilon, answerLearningRate
+    
+    return NOT_POSSIBLE
 
 if __name__ == '__main__':
     questions = [
